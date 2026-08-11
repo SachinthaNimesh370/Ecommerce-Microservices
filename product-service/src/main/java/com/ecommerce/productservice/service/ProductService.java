@@ -6,13 +6,16 @@ import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.exception.ResourceNotFoundException;
 import com.ecommerce.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -75,5 +78,41 @@ public class ProductService {
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * Reduce stock quantity when an order is created.
+     * @return previous quantity before reduction
+     */
+    @Transactional
+    public int reduceStock(Long productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+        int previous = product.getQuantity();
+        int updated = previous - quantity;
+        if (updated < 0) {
+            log.warn("Insufficient stock for productId: {}. Available: {}, Requested: {}", productId, previous, quantity);
+            updated = 0;
+        }
+        product.setQuantity(updated);
+        productRepository.save(product);
+        log.info("Stock reduced for productId: {} | {} -> {}", productId, previous, updated);
+        return previous;
+    }
+
+    /**
+     * Restore stock quantity when an order is cancelled.
+     * @return previous quantity before restoration
+     */
+    @Transactional
+    public int restoreStock(Long productId, int quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+        int previous = product.getQuantity();
+        int updated = previous + quantity;
+        product.setQuantity(updated);
+        productRepository.save(product);
+        log.info("Stock restored for productId: {} | {} -> {}", productId, previous, updated);
+        return previous;
     }
 }
