@@ -7,10 +7,10 @@ import com.ecommerce.orderservice.entity.Order;
 import com.ecommerce.orderservice.entity.OrderItem;
 import com.ecommerce.orderservice.entity.OrderStatus;
 import com.ecommerce.orderservice.event.OrderEvent;
+import com.ecommerce.orderservice.event.OrderItemEvent;
 import com.ecommerce.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,6 +24,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -95,16 +96,26 @@ public class OrderService {
         
         Order savedOrder = orderRepository.save(order);
 
-        // Publish Order Event
+        // Build items list for event
+        List<OrderItemEvent> eventItems = savedOrder.getItems().stream()
+                .map(item -> OrderItemEvent.builder()
+                        .productId(item.getProductId())
+                        .quantity(item.getQuantity())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Publish ORDER_CREATED event
         OrderEvent event = OrderEvent.builder()
+                .eventType("ORDER_CREATED")
                 .eventId(UUID.randomUUID().toString())
                 .orderId(savedOrder.getId())
                 .userId(savedOrder.getUserId())
                 .totalAmount(savedOrder.getTotalAmount())
                 .status(savedOrder.getStatus().name())
+                .items(eventItems)
                 .build();
-        
-        orderEventPublisher.publishOrderEvent(event);
+
+        orderEventPublisher.publishOrderCreatedEvent(event);
         log.info("Order created successfully with id: {}", savedOrder.getId());
 
         return savedOrder;
@@ -130,6 +141,30 @@ public class OrderService {
             throw new RuntimeException("Order is already cancelled");
         }
         order.setStatus(OrderStatus.CANCELLED);
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        // Build items list for event
+        List<OrderItemEvent> eventItems = savedOrder.getItems().stream()
+                .map(item -> OrderItemEvent.builder()
+                        .productId(item.getProductId())
+                        .quantity(item.getQuantity())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Publish ORDER_CANCELLED event
+        OrderEvent event = OrderEvent.builder()
+                .eventType("ORDER_CANCELLED")
+                .eventId(UUID.randomUUID().toString())
+                .orderId(savedOrder.getId())
+                .userId(savedOrder.getUserId())
+                .totalAmount(savedOrder.getTotalAmount())
+                .status(savedOrder.getStatus().name())
+                .items(eventItems)
+                .build();
+
+        orderEventPublisher.publishOrderCancelledEvent(event);
+        log.info("Order cancelled successfully with id: {}", savedOrder.getId());
+
+        return savedOrder;
     }
 }

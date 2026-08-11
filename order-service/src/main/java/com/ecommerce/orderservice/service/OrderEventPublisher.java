@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderEventPublisher {
 
-    private static final String ORDER_TOPIC = "order-events";
+    private static final String ORDER_CREATED_TOPIC = "order-created";
+    private static final String ORDER_CANCELLED_TOPIC = "order-cancelled";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -17,7 +18,12 @@ public class OrderEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publishOrderEvent(OrderEvent orderEvent) {
-        kafkaTemplate.send(ORDER_TOPIC, orderEvent.getOrderId().toString(), orderEvent);
+    public void publishOrderCreatedEvent(OrderEvent orderEvent) {
+        kafkaTemplate.send(ORDER_CREATED_TOPIC, orderEvent.getOrderId().toString(), orderEvent);
+    }
+
+    public void publishOrderCancelledEvent(OrderEvent orderEvent) {
+        kafkaTemplate.send(ORDER_CANCELLED_TOPIC, orderEvent.getOrderId().toString(), orderEvent);
     }
 }
+
