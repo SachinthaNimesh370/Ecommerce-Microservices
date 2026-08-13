@@ -1,5 +1,16 @@
 services:
 
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: ecommerce-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
   kafka:
     image: apache/kafka:4.0.1
     container_name: ecommerce-kafka
