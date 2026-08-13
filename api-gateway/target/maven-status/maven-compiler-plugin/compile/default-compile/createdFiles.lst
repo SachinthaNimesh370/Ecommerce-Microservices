@@ -1,0 +1,4 @@
+com\ecommerce\apigateway\util\JwtUtils.class
+com\ecommerce\apigateway\filter\AuthenticationFilter.class
+com\ecommerce\apigateway\ApiGatewayApplication.class
+com\ecommerce\apigateway\filter\RouterValidator.class
