@@ -1,13 +1,13 @@
 server:
-  port: 8085
+  port: 8082
 
 spring:
   application:
-    name: inventory-service
+    name: product-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/inventory_db
-    username: postgres
-    password: "123123"
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/product_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123123}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -17,21 +17,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   kafka:
-    bootstrap-servers: localhost:10092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:10092}
     consumer:
-      group-id: inventory-service-group
+      group-id: product-service-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
     producer:
-      bootstrap-servers: localhost:10092
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:10092}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250655368566D5970
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250655368566D5970}
   expiration: 86400000
 
 management:

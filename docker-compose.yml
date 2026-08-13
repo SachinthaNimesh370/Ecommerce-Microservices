@@ -1,41 +1,139 @@
 services:
 
-  api-gateway:
-    build:
-      context: ./api-gateway
-    container_name: ecommerce-api-gateway
-    ports:
-      - "8080:8080"
-    depends_on:
-      - kafka
+  # ─── Databases ─────────────────────────────────────────────────────────────
+
+  user-db:
+    image: postgres:15-alpine
+    container_name: ecommerce-user-db
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123123"
+    ports:
+      - "5432:5432"
+
+  product-db:
+    image: postgres:15-alpine
+    container_name: ecommerce-product-db
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123123"
+    ports:
+      - "5433:5432"
+
+  order-db:
+    image: postgres:15-alpine
+    container_name: ecommerce-order-db
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123123"
+    ports:
+      - "5434:5432"
+
+  inventory-db:
+    image: postgres:15-alpine
+    container_name: ecommerce-inventory-db
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123123"
+    ports:
+      - "5435:5432"
+
+  # ─── Event Bus ─────────────────────────────────────────────────────────────
 
   kafka:
     image: apache/kafka:4.0.1
     container_name: ecommerce-kafka
-
     ports:
       - "10092:10092"
-
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-
       KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:10092,CONTROLLER://:9093
-
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:10092
-
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
-
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  # ─── Microservices ──────────────────────────────────────────────────────────
+
+  user-service:
+    build: ./user-service
+    container_name: ecommerce-user-service
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://user-db:5432/user_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: "123123"
+    depends_on:
+      - user-db
+
+  product-service:
+    build: ./product-service
+    container_name: ecommerce-product-service
+    ports:
+      - "18082:8082"
+    environment:
+      DB_URL: jdbc:postgresql://product-db:5432/product_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: "123123"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - product-db
+      - kafka
+
+  order-service:
+    build: ./order-service
+    container_name: ecommerce-order-service
+    ports:
+      - "18083:8083"
+    environment:
+      DB_URL: jdbc:postgresql://order-db:5432/order_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: "123123"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - order-db
+      - kafka
+
+  inventory-service:
+    build: ./inventory-service
+    container_name: ecommerce-inventory-service
+    ports:
+      - "18084:8084"
+    environment:
+      DB_URL: jdbc:postgresql://inventory-db:5432/inventory_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: "123123"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - inventory-db
+      - kafka
+
+  notification-service:
+    build: ./notification-service
+    container_name: ecommerce-notification-service
+    ports:
+      - "18085:8085"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - kafka
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: ecommerce-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - product-service
+      - order-service

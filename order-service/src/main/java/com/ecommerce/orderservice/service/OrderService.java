@@ -11,6 +11,7 @@ import com.ecommerce.orderservice.event.OrderItemEvent;
 import com.ecommerce.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,9 +36,11 @@ public class OrderService {
     private final OrderEventPublisher orderEventPublisher;
     private final RestTemplate restTemplate;
 
-    // Hardcoding product service URL for now, could be in application.yaml
-    private final String PRODUCT_SERVICE_URL = "http://localhost:8082/api/products/";
-    private final String USER_SERVICE_URL = "http://localhost:8081/api/users/";
+    @Value("${product.service.url:http://product-service:8082/api/products/}")
+    private String productServiceUrl;
+
+    @Value("${user.service.url:http://user-service:8081/api/users/}")
+    private String userServiceUrl;
 
     @Transactional
     public Order createOrder(OrderRequest orderRequest) {
@@ -55,7 +58,7 @@ public class OrderService {
             }
             HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
             ResponseEntity<Object> response = restTemplate.exchange(
-                    USER_SERVICE_URL + orderRequest.getUserId(),
+                    userServiceUrl + orderRequest.getUserId(),
                     HttpMethod.GET,
                     requestEntity,
                     Object.class
@@ -76,7 +79,7 @@ public class OrderService {
 
         for (OrderItemRequest itemRequest : orderRequest.getItems()) {
             // Validate product and fetch price
-            ProductDto product = restTemplate.getForObject(PRODUCT_SERVICE_URL + itemRequest.getProductId(), ProductDto.class);
+            ProductDto product = restTemplate.getForObject(productServiceUrl + itemRequest.getProductId(), ProductDto.class);
             if (product == null) {
                 throw new RuntimeException("Product not found with id: " + itemRequest.getProductId());
             }
