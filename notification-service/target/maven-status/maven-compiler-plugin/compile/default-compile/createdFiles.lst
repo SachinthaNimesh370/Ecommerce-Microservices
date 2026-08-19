@@ -1,5 +1,8 @@
 com\ecommerce\notificationservice\NotificationServiceApplication.class
 com\ecommerce\notificationservice\event\OrderEvent.class
 com\ecommerce\notificationservice\event\OrderItemEvent.class
+com\ecommerce\notificationservice\event\StockEvent$StockEventBuilder.class
 com\ecommerce\notificationservice\event\StockEvent.class
 com\ecommerce\notificationservice\kafka\NotificationConsumer.class
+com\ecommerce\notificationservice\event\OrderEvent$OrderEventBuilder.class
+com\ecommerce\notificationservice\event\OrderItemEvent$OrderItemEventBuilder.class
