@@ -71,7 +71,7 @@ The pipeline uses a **GitHub Actions Matrix Strategy** to run parallel, isolated
 
 ### Stage 6: Container Registry Publishing
 - **Registry**: GitHub Container Registry (`ghcr.io`)
-- **Authentication**: `docker/login-action@v3` utilizing `${{ secrets.GITHUB_TOKEN }}`.
+- **Authentication & Permissions**: `docker/login-action@v3` utilizing `${{ secrets.GITHUB_TOKEN }}` with explicit `packages: write` permissions.
 - **Execution Condition**: Pushes automatically on push to target branches (`main`, `master`, `dockerUp`, `CICD`), skipping pushes on `pull_request` runs.
 
 ### Stage 7: Docker Compose Stack Validation
@@ -83,14 +83,11 @@ The pipeline uses a **GitHub Actions Matrix Strategy** to run parallel, isolated
 
 The pipeline is defined in [`.github/workflows/ci-cd.yml`](file:///c:/Users/sachi/Desktop/user-service/.github/workflows/ci-cd.yml).
 
-### Workflow Triggers
+### Workflow Permissions
 ```yaml
-on:
-  push:
-    branches: [main, master, dockerUp, CICD]
-  pull_request:
-    branches: [main, master, CICD]
-  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
 ```
 
 ---

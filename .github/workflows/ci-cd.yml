@@ -17,6 +17,10 @@ on:
 env:
   REGISTRY: ghcr.io
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-test-scan-push:
     name: Build, Test, Security Scan & Push
