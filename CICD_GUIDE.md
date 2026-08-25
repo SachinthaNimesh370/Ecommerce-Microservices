@@ -17,10 +17,11 @@ git push
    ▼
 GitHub Actions Pipeline
    │
-   ├──────────► 1. Maven Build & Automated Testing (JDK 17)
-   ├──────────► 2. Docker Image Build (per Microservice)
-   ├──────────► 3. Trivy Vulnerability & Security Scan
-   └──────────► 4. Push to Container Registry (GHCR / Amazon ECR)
+   ├──────────► 1. PostgreSQL Service Container Setup (port 5432)
+   ├──────────► 2. Maven Build & Automated Testing (JDK 17)
+   ├──────────► 3. Docker Image Build (per Microservice, lowercase tags)
+   ├──────────► 4. Trivy Vulnerability & Security Scan
+   └──────────► 5. Push to Container Registry (GHCR / Amazon ECR)
 ```
 
 ---
@@ -31,44 +32,49 @@ The pipeline uses a **GitHub Actions Matrix Strategy** to run parallel, isolated
 
 | Microservice | Path | Container Registry Image Name |
 | :--- | :--- | :--- |
-| **API Gateway** | `./api-gateway` | `ghcr.io/<owner>/api-gateway` |
-| **User Service** | `./user-service` | `ghcr.io/<owner>/user-service` |
-| **Product Service** | `./product-service` | `ghcr.io/<owner>/product-service` |
-| **Order Service** | `./order-service` | `ghcr.io/<owner>/order-service` |
-| **Inventory Service** | `./inventory-service` | `ghcr.io/<owner>/inventory-service` |
-| **Notification Service** | `./notification-service` | `ghcr.io/<owner>/notification-service` |
+| **API Gateway** | `./api-gateway` | `ghcr.io/<lowercase-owner>/api-gateway` |
+| **User Service** | `./user-service` | `ghcr.io/<lowercase-owner>/user-service` |
+| **Product Service** | `./product-service` | `ghcr.io/<lowercase-owner>/product-service` |
+| **Order Service** | `./order-service` | `ghcr.io/<lowercase-owner>/order-service` |
+| **Inventory Service** | `./inventory-service` | `ghcr.io/<lowercase-owner>/inventory-service` |
+| **Notification Service** | `./notification-service` | `ghcr.io/<lowercase-owner>/notification-service` |
 
 ---
 
 ## 3. Pipeline Stages & Execution Flow
 
-### Stage 1: Build & Unit/Integration Tests
-- **Environment**: JDK 17 (Eclipse Temurin)
+### Stage 1: Database Service Provisioning
+- **Service**: PostgreSQL 15 container (`postgres:15-alpine`) initialized on runner port `5432` with health checks (`pg_isready`).
+- **Database**: `ecommerce_test_db` for Spring `@SpringBootTest` context loading and integration testing.
+
+### Stage 2: Build & Unit/Integration Tests
+- **Environment**: JDK 17 (Eclipse Temurin) via `actions/setup-java@v5`
 - **Maven Dependency Caching**: Caches `~/.m2/repository` based on `pom.xml` hashes per service to optimize build times.
 - **Command**: `./mvnw clean package -DskipTests=false`
 - **Output**: Executable JAR files compiled in target directories.
 
-### Stage 2: Source Code & Dependency Security Scanning
+### Stage 3: Source Code & Dependency Security Scanning
 - **Tool**: Trivy Security Scanner (`aquasecurity/trivy-action`)
 - **Scope**: Scans project source files and Maven dependencies for known vulnerabilities (CVEs).
 - **Severity Level**: Filters for `CRITICAL` and `HIGH` severity vulnerabilities.
 
-### Stage 3: Docker Image Compilation
+### Stage 4: Docker Image Compilation
 - **Tool**: Docker Buildx (`docker/setup-buildx-action@v3`)
+- **Name Standard**: Converts GitHub repository owner to lowercase (e.g. `sachinthanimesh370`) to strictly satisfy Docker repository Naming Conventions.
 - **Tags**:
-  - `ghcr.io/<owner>/<service>:<git-sha>`
-  - `ghcr.io/<owner>/<service>:latest`
+  - `ghcr.io/<lowercase-owner>/<service>:<git-sha>`
+  - `ghcr.io/<lowercase-owner>/<service>:latest`
 
-### Stage 4: Docker Container Security Scanning
+### Stage 5: Docker Container Security Scanning
 - **Tool**: Trivy Image Scanner
 - **Scope**: Scans the compiled Docker image filesystem and base image OS packages for vulnerabilities prior to registry publishing.
 
-### Stage 5: Container Registry Publishing
+### Stage 6: Container Registry Publishing
 - **Registry**: GitHub Container Registry (`ghcr.io`)
-- **Authentication**: `docker/login-action@v3` utilizing `${{ secrets.GITHUB_TOKEN }}`.
+- **Authentication & Permissions**: `docker/login-action@v3` utilizing `${{ secrets.GITHUB_TOKEN }}` with explicit `packages: write` permissions.
 - **Execution Condition**: Pushes automatically on push to target branches (`main`, `master`, `dockerUp`, `CICD`), skipping pushes on `pull_request` runs.
 
-### Stage 6: Docker Compose Stack Validation
+### Stage 7: Docker Compose Stack Validation
 - Validates structural syntax of `docker-compose.yml` to verify multi-container setup consistency across all microservices and infrastructure components (PostgreSQL DBs, Kafka).
 
 ---
@@ -77,14 +83,11 @@ The pipeline uses a **GitHub Actions Matrix Strategy** to run parallel, isolated
 
 The pipeline is defined in [`.github/workflows/ci-cd.yml`](file:///c:/Users/sachi/Desktop/user-service/.github/workflows/ci-cd.yml).
 
-### Workflow Triggers
+### Workflow Permissions
 ```yaml
-on:
-  push:
-    branches: [main, master, dockerUp, CICD]
-  pull_request:
-    branches: [main, master, CICD]
-  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
 ```
 
 ---
@@ -108,7 +111,7 @@ When advancing to AWS EKS deployment (Parts O–Q), update `.github/workflows/ci
 - name: Push to Amazon ECR
   run: |
     ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-    docker tag ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
+    docker tag ghcr.io/${{ env.REPO_OWNER }}/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
     docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
 ```
 

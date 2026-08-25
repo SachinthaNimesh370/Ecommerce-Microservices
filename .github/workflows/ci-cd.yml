@@ -17,10 +17,30 @@ on:
 env:
   REGISTRY: ghcr.io
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-test-scan-push:
     name: Build, Test, Security Scan & Push
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "123123"
+          POSTGRES_DB: ecommerce_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       fail-fast: false
       matrix:
@@ -36,8 +56,12 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      - name: Set Lowercase Repository Owner & Environment Variables
+        run: |
+          echo "REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -48,6 +72,10 @@ jobs:
         run: chmod +x ./${{ matrix.service }}/mvnw
 
       - name: Build and Run Tests
+        env:
+          DB_URL: jdbc:postgresql://localhost:5432/ecommerce_test_db
+          DB_USERNAME: postgres
+          DB_PASSWORD: "123123"
         run: |
           cd ${{ matrix.service }}
           ./mvnw clean package -DskipTests=false
@@ -75,7 +103,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          IMAGE_NAME="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}"
+          IMAGE_NAME="${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ matrix.service }}"
           IMAGE_TAG="${{ github.sha }}"
           docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ./${{ matrix.service }}
 
@@ -83,7 +111,7 @@ jobs:
       - name: Run Trivy Docker Image Vulnerability Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }}'
+          image-ref: '${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ matrix.service }}:${{ github.sha }}'
           format: 'table'
           exit-code: '0'
           severity: 'CRITICAL,HIGH'
@@ -91,7 +119,7 @@ jobs:
       - name: Push Docker Image to Container Registry
         if: github.event_name != 'pull_request'
         run: |
-          IMAGE_NAME="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}"
+          IMAGE_NAME="${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ matrix.service }}"
           IMAGE_TAG="${{ github.sha }}"
           docker push ${IMAGE_NAME}:${IMAGE_TAG}
           docker push ${IMAGE_NAME}:latest
@@ -112,7 +140,7 @@ jobs:
       # - name: Build & Push to Amazon ECR
       #   run: |
       #     ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-      #     docker tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
+      #     docker tag ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
       #     docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
 
   docker-compose-validate:
