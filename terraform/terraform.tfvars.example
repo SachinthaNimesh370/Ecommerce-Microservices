@@ -1,0 +1,22 @@
+# E-Commerce Microservices Terraform Variables Example
+# Copy this file to terraform.tfvars and customize if needed.
+
+aws_region        = "us-east-1"
+environment       = "dev"
+vpc_cidr          = "10.0.0.0/16"
+
+# Free-Tier & Dev Configuration
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_name              = "ecommerce_db"
+db_username          = "postgres"
+db_password          = "PostgresSecure2026!"
+
+eks_cluster_name        = "ecommerce-eks-cluster"
+eks_node_instance_types = ["t3.micro"]
+eks_desired_nodes       = 2
+eks_min_nodes           = 1
+eks_max_nodes           = 3
+
+# Set enable_msk to true if you wish to provision Amazon MSK Kafka cluster
+enable_msk              = false
