@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-databases
+  namespace: ecommerce
+spec:
+  ttlSecondsAfterFinished: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: create-databases
+          image: postgres:15-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Creating databases..."
+              PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U postgres -d ecommerce_db -c "CREATE DATABASE user_db;" 2>/dev/null || echo "user_db already exists"
+              PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U postgres -d ecommerce_db -c "CREATE DATABASE product_db;" 2>/dev/null || echo "product_db already exists"
+              PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U postgres -d ecommerce_db -c "CREATE DATABASE order_db;" 2>/dev/null || echo "order_db already exists"
+              PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U postgres -d ecommerce_db -c "CREATE DATABASE inventory_db;" 2>/dev/null || echo "inventory_db already exists"
+              echo "All databases created/verified!"
+          env:
+            - name: DB_HOST
+              value: "ecommerce-postgres-dev.c2tmcgaiislf.us-east-1.rds.amazonaws.com"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: DB_PASSWORD
