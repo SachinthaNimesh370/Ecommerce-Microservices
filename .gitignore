@@ -1,0 +1,111 @@
+# ==========================================
+# 1. Environment & Secrets
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Private Keys, Certificates & Credentials
+*.pem
+*.key
+*.pkcs12
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cer
+id_rsa
+id_rsa.pub
+
+# AWS & Cloud Credentials
+.aws/
+credentials
+gcp-key.json
+service-account*.json
+*.json.key
+
+# ==========================================
+# 2. Terraform
+# ==========================================
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+
+# ==========================================
+# 3. Java / Maven / Gradle
+# ==========================================
+**/target/
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+
+# Maven / Gradle wrappers & logs
+.mvn/wrapper/maven-wrapper.jar
+.gradle/
+build/
+**/build/
+*.log
+
+# ==========================================
+# 4. IDEs & Editors
+# ==========================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse / Spring Tool Suite
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.sts4-cache
+
+# NetBeans
+nbproject/
+/nbbuild/
+/dist/
+
+# ==========================================
+# 5. OS & System Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Database & Dump files
+*.sqlite
+*.sqlite3
+*.db
+*.sql
+*.dump
