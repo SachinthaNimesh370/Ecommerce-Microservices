@@ -1,0 +1,15 @@
+---
+# Master Orchestration Playbook (site.yml)
+# Provisions and configures complete environment in order
+
+- name: 1. Baseline System Setup & Security
+  import_playbook: 01-system-setup.yml
+
+- name: 2. Docker & Container Engine Setup
+  import_playbook: 02-docker-setup.yml
+
+- name: 3. Deploy E-Commerce Microservices Stack
+  import_playbook: 03-deploy-microservices.yml
+
+- name: 4. Kubernetes Admin & Bastion Tools
+  import_playbook: 04-k8s-prerequisites.yml

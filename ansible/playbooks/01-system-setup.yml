@@ -1,0 +1,7 @@
+---
+# Playbook 01: Baseline System Setup & Hardening
+- name: Configure Baseline System and Security
+  hosts: app_servers:bastion_hosts
+  become: yes
+  roles:
+    - common

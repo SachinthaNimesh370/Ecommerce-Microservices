@@ -1,0 +1,7 @@
+---
+# Playbook 03: Deploy E-Commerce Microservices
+- name: Deploy Microservices Stack via Docker Compose
+  hosts: app_servers
+  become: yes
+  roles:
+    - microservices

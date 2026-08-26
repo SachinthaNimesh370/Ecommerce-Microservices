@@ -1,0 +1,55 @@
+---
+# Docker Role: Install & Configure Docker Engine and Docker Compose
+
+- name: Add Docker official GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Add Docker official repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker CE, CLI, and Docker Compose plugin
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Configure Docker daemon settings (log rotation)
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      }
+    mode: '0644'
+  notify: Restart Docker
+
+- name: Ensure Docker service is running and enabled on boot
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Add deployer user and current user to docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  loop:
+    - "{{ app_user }}"
+    - "{{ ansible_user | default('ubuntu') }}"
