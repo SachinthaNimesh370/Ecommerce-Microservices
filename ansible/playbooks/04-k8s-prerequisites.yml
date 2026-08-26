@@ -1,0 +1,7 @@
+---
+# Playbook 04: Install Kubernetes Admin Tools
+- name: Setup Kubernetes Management Tools
+  hosts: bastion_hosts:localhost
+  become: yes
+  roles:
+    - k8s_tools

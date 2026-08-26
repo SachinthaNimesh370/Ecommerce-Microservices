@@ -1,0 +1,54 @@
+---
+# Common Role: Baseline System Configuration & Hardening
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install essential baseline utilities
+  package:
+    name:
+      - curl
+      - wget
+      - git
+      - jq
+      - unzip
+      - htop
+      - ufw
+      - ca-certificates
+      - apt-transport-https
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Create dedicated deployer user
+  user:
+    name: "{{ app_user }}"
+    shell: /bin/bash
+    groups: sudo
+    append: yes
+    create_home: yes
+    state: present
+
+- name: Ensure application directory exists with correct ownership
+  file:
+    path: "{{ app_directory }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+
+- name: Configure UFW firewall rules
+  ufw:
+    rule: allow
+    port: "{{ item | string }}"
+    proto: tcp
+  loop: "{{ allowed_tcp_ports }}"
+  when: ansible_os_family == "Debian"
+
+- name: Enable UFW firewall
+  ufw:
+    state: enabled
+  when: ansible_os_family == "Debian"

@@ -1,0 +1,66 @@
+---
+# Kubernetes Tools Role: Install kubectl, helm, and AWS CLI
+
+- name: Check if AWS CLI is installed
+  command: which aws
+  register: aws_check
+  failed_when: false
+  changed_when: false
+
+- name: Install unzip package if on Debian/Ubuntu
+  apt:
+    name: unzip
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian" and aws_check.rc != 0
+
+- name: Download AWS CLI v2 zip
+  get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: '0644'
+  when: aws_check.rc != 0 and ansible_os_family == "Debian"
+
+- name: Unpack and Install AWS CLI v2
+  shell: |
+    unzip -q -o /tmp/awscliv2.zip -d /tmp
+    /tmp/aws/install --update
+    rm -rf /tmp/aws /tmp/awscliv2.zip
+  when: aws_check.rc != 0 and ansible_os_family == "Debian"
+
+- name: Check if kubectl is installed
+  command: which kubectl
+  register: kubectl_check
+  failed_when: false
+  changed_when: false
+
+- name: Download and install kubectl
+  get_url:
+    url: "https://dl.k8s.io/release/v1.29.2/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+  when: kubectl_check.rc != 0
+
+- name: Check if Helm is installed
+  command: which helm
+  register: helm_check
+  failed_when: false
+  changed_when: false
+
+- name: Download and install Helm script
+  shell: |
+    curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 /tmp/get_helm.sh
+    /tmp/get_helm.sh
+    rm -f /tmp/get_helm.sh
+  when: helm_check.rc != 0
+
+- name: Verify installed tool versions
+  command: "{{ item }}"
+  register: tool_output
+  changed_when: false
+  failed_when: false
+  loop:
+    - "aws --version"
+    - "kubectl version --client"
+    - "helm version --short"

@@ -1,0 +1,7 @@
+---
+# Playbook 02: Install and Configure Docker Engine & Compose
+- name: Install Docker & Docker Compose
+  hosts: app_servers
+  become: yes
+  roles:
+    - docker

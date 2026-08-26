@@ -1,0 +1,42 @@
+---
+# Global Variables for E-Commerce Ansible Automation
+
+# Project Details
+project_name: "ecommerce-microservices"
+app_user: "deployer"
+app_directory: "/opt/ecommerce"
+
+# Java & Docker Settings
+java_version: "17"
+docker_compose_version: "v2.24.5"
+
+# Microservices Information
+microservices:
+  - name: api-gateway
+    port: 8080
+  - name: user-service
+    port: 8081
+  - name: product-service
+    port: 8082
+  - name: order-service
+    port: 8083
+  - name: inventory-service
+    port: 8084
+  - name: notification-service
+    port: 8085
+
+# Database Configuration Defaults
+db_host: "ecommerce-postgres-dev.c2tmcgaiislf.us-east-1.rds.amazonaws.com"
+db_port: 5432
+db_user: "postgres"
+db_password: "NewStrongPassword2026!"
+
+# Kafka Configuration Defaults
+kafka_bootstrap_servers: "kafka:9092"
+
+# Security & Firewall Ports
+allowed_tcp_ports:
+  - 22    # SSH
+  - 80    # HTTP
+  - 443   # HTTPS
+  - 8080  # API Gateway

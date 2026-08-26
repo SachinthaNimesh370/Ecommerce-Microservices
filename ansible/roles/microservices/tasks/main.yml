@@ -1,0 +1,44 @@
+---
+# Microservices Role: Deploy & Manage Application Stack
+
+- name: Create required application subdirectories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+  loop:
+    - "{{ app_directory }}/config"
+    - "{{ app_directory }}/logs"
+
+- name: Deploy .env configuration file
+  template:
+    src: env.j2
+    dest: "{{ app_directory }}/.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0600'
+
+- name: Copy docker-compose.yml to host
+  copy:
+    src: "{{ playbook_dir }}/../docker-compose.yml"
+    dest: "{{ app_directory }}/docker-compose.yml"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+
+- name: Start microservices stack using Docker Compose
+  command: docker compose --project-directory {{ app_directory }} up -d
+  register: compose_output
+  changed_when: "'Started' in compose_output.stdout or 'Created' in compose_output.stdout"
+
+- name: Wait for API Gateway health endpoint to be UP
+  uri:
+    url: "http://localhost:8080/actuator/health"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 30
+  delay: 5
+  ignore_errors: yes
