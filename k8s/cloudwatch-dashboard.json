@@ -1,0 +1,158 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "pod_cpu_utilization", "ClusterName", "ecommerce-eks-cluster-dev", "Namespace", "ecommerce", "PodName", "api-gateway", { "label": "api-gateway CPU" } ],
+          [ "...", "user-service", { "label": "user-service CPU" } ],
+          [ "...", "product-service", { "label": "product-service CPU" } ],
+          [ "...", "order-service", { "label": "order-service CPU" } ],
+          [ "...", "inventory-service", { "label": "inventory-service CPU" } ],
+          [ "...", "notification-service", { "label": "notification-service CPU" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Microservices CPU Utilization (%)",
+        "period": 60,
+        "stat": "Average",
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "pod_memory_utilization", "ClusterName", "ecommerce-eks-cluster-dev", "Namespace", "ecommerce", "PodName", "api-gateway", { "label": "api-gateway Memory" } ],
+          [ "...", "user-service", { "label": "user-service Memory" } ],
+          [ "...", "product-service", { "label": "product-service Memory" } ],
+          [ "...", "order-service", { "label": "order-service Memory" } ],
+          [ "...", "inventory-service", { "label": "inventory-service Memory" } ],
+          [ "...", "notification-service", { "label": "notification-service Memory" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Microservices Memory Utilization (%)",
+        "period": 60,
+        "stat": "Average",
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "ecommerce-postgres-dev", { "label": "RDS CPU (%)", "color": "#ff7f0e" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "RDS PostgreSQL CPU Utilization",
+        "period": 300,
+        "stat": "Average",
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 8,
+      "y": 6,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/RDS", "FreeableMemory", "DBInstanceIdentifier", "ecommerce-postgres-dev", { "label": "Freeable Memory (Bytes)", "color": "#2ca02c" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "RDS PostgreSQL Freeable Memory",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 16,
+      "y": 6,
+      "width": 8,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "ecommerce-postgres-dev", { "label": "DB Connections", "color": "#1f77b4" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "RDS Active Database Connections",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "node_cpu_utilization", "ClusterName", "ecommerce-eks-cluster-dev", { "label": "EKS Nodes CPU (%)" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "EKS Cluster Nodes CPU Utilization",
+        "period": 60,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ContainerInsights", "pod_number_of_container_restarts", "ClusterName", "ecommerce-eks-cluster-dev", "Namespace", "ecommerce", { "label": "Container Restarts" } ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Microservices Pod Restarts",
+        "period": 60,
+        "stat": "Sum"
+      }
+    }
+  ]
+}
